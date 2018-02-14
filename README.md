@@ -65,8 +65,9 @@ Enable discrete SSH Agents to avoid leaking access across hosts
 ### Explanation
 
 When you `ssh devhost` with the configuration above, the following will happen:
-1. `solo-agent` will see if there is already a valid socket symlinked from
-   `~/.ssh/solo-sock/github_ro`
+1. The Match directive in the include will execute `solo-agent`. It will
+   determine if there is already a valid socket symlinked from
+   `~/.ssh/solo-sock/github_ro`:
 
    - If there is, it will ensure the specified key is loaded into that agent
    - If not, it will start a new agent, create the symlink, and ensure the
@@ -75,7 +76,7 @@ When you `ssh devhost` with the configuration above, the following will happen:
 2. The SSH connection to `devhost` will use the SSH Agent connected to the
    specified socket. Only the key(s) added to it will be available.
 
-   - You can continue to authenticate to `devhoste` with the `IdentityFile` of
+   - You can continue to authenticate to `devhost` with the `IdentityFile` of
      your choice without worry.
 
 
