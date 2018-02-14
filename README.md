@@ -18,7 +18,8 @@ Enable discrete SSH Agents to avoid leaking access across hosts
 ### ForwardAgent Resolution
 
 - Do not forward your SSH Agent. You do not need it to use `ProxyCommand` to
-  connect through bastion/jump hosts.
+  connect through bastion/jump hosts (or `ProxyJump` with current versions of
+  OpenSSH)
 
   - For example: [The alternative: ProxyCommand to the rescue - SSH Agent
     Forwarding considered harmful](https://heipei.github.io/2015/02/26/SSH-Agent-Forwarding-considered-harmful/#the-alternative-proxycommand-to-the-rescue)
@@ -86,6 +87,7 @@ When you `ssh devhost` with the configuration above, the following will happen:
 ## Requirements
 
 - [OpenSSH 7.3](https://www.openssh.com/txt/release-7.3) added `IdentityAgent`
+  and `Include`
 
   - macOS 10.13 High Sierra or later
   - Ubuntu 17.04 Zesty Zapus or later
