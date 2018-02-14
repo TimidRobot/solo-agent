@@ -92,6 +92,9 @@ When you `ssh devhost` with the configuration above, the following will happen:
   - macOS 10.13 High Sierra or later
   - Ubuntu 17.04 Zesty Zapus or later
 
+- Python (to provide GNU coreutils readlink-like functionality on BSD based
+  systems--including macOS)
+
 
 ## Alternatives
 
