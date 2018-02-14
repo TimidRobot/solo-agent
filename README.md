@@ -23,7 +23,7 @@ Enable discrete SSH Agents to avoid leaking access across hosts
   - For example: [The alternative: ProxyCommand to the rescue - SSH Agent
     Forwarding considered harmful](https://heipei.github.io/2015/02/26/SSH-Agent-Forwarding-considered-harmful/#the-alternative-proxycommand-to-the-rescue)
 
-- Use seperate SSH Keys for different scopes (including read-only keys).
+- Use separate SSH Keys for different scopes (including read-only keys).
   Accomplish this by either:
 
   - Use `solo-agent` to isolate keys when ForwardAgent is needed (ex. for
@@ -34,13 +34,16 @@ Enable discrete SSH Agents to avoid leaking access across hosts
 
 ## Using `solo-agent`
 
-1. Assumtions
+1. Assumptions
 
    - You need to access GitHub from a host (`devhost`) on which a third-party
      has root access
-   - You have configured a GitHub read-only key and it's located on your
-     laptop at: `~/.ssh/rsa_github_ro`
-   - You have cloned this repository to `~/git/solo-agent`
+   - You have already created a SSH key pair for use with GitHub and added to
+     your GitHub account as a read-only key
+   - The private key mentioned above is located on your laptop at:
+     `~/.ssh/rsa_github_ro`
+   - You have cloned this repository to to your laptop. It is located at:
+     `~/git/solo-agent`
 
 2. Ensure the global section of your SSH configuration contains:
 
