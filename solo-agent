@@ -1,0 +1,119 @@
+#!/bin/bash
+set -o errexit
+set -o errtrace
+set -o nounset
+
+trap '_es=${?};
+    _lo=${LINENO};
+    _co=${BASH_COMMAND};
+    echo "${0}: line ${_lo}: \"${_co}\" exited with a status of ${_es}";
+    exit ${_es}' ERR
+
+PROG="${0##*/}"
+SSH_DIR="${HOME}/.ssh"
+SOCKET_DIR="${SSH_DIR}/solo-sock"
+USAGE="\
+Usage:  ${PROG} ID IDENTITY_FILE
+        ${PROG} -h
+
+Enable discrete SSH Agents to avoid leaking access across hosts
+
+Arguments:
+
+    ID              A simple label to use for the socket symlink
+    IDENTITY_FILE   The SSH IdentityFile to load into the agent (without the
+                    path; the file must exist in ${SSH_DIR})
+"
+
+
+display_variables() {
+    [[ -z "${SSH_AGENT_PID:-}" ]] || \
+        echo "SSH_AGENT_PID: ${SSH_AGENT_PID}"
+    [[ -z "${SSH_AUTH_SOCK:-}" ]] || \
+        echo "SSH_AUTH_SOCK: ${SSH_AUTH_SOCK}"
+    [[ -z "${ID_SOCK:-}" ]] || \
+        echo "ID_SOCK: ${ID_SOCK}"
+}
+
+error_exit() {
+    # Display error message and exit
+    local _es _msg
+    _msg=${1}
+    _es=${2:-1}
+    echo "ERROR: ${_msg}" 1>&2
+    exit ${_es}
+}
+
+
+help_print() {
+    # Print help/usage, then exit (incorrect usage should exit 2)
+    local _es=${1:-0}
+    echo "${USAGE}"
+    exit ${_es}
+}
+
+
+help_request_check() {
+    # Print Help/Usage if requested
+    local _arg
+    shopt -s nocasematch
+    # only accept help "action" in 1st position
+    [[ "${1:-}" == 'help' ]] && help_print
+    # evaluate all positional parameters for help options
+    for _arg in "${@}"
+    do
+        case "${_arg}" in
+            -h | -help | --help ) help_print ;;
+        esac
+    done
+    shopt -u nocasematch
+    return 0
+}
+
+pyreadlink() {
+    echo "$(python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' \
+            "${1}")"
+}
+
+
+# Parse and verify arguments/options
+help_request_check "${@:-}"
+(( ${#} == 0 )) && help_print 2
+if (( ${#} < 2 ))
+then
+    error_exit 'Too few arguments: must specify both ID and IDENTITY_FILE'
+elif (( ${#} > 2 ))
+then
+    error_exit 'Too many arguments: must specify only ID and IDENTITY_FILE'
+fi
+ID="${1}"
+IDENTITY_FILE="${SSH_DIR}/${2}"
+if [[ ! -f "${IDENTITY_FILE}" ]]
+then
+    error_exit "IDENTITY_FILE does not exist: ${IDENTITY_FILE}"
+fi
+
+mkdir -p ${SOCKET_DIR}
+
+ID_SOCK=${SOCKET_DIR}/${ID}
+LINKED_SOCK="$(pyreadlink ${ID_SOCK})"
+
+if [[ -n "${LINKED_SOCK}" ]] && [[ -S "${LINKED_SOCK}" ]]
+then
+    # SSH Agent is already running with active ID_SOCK
+    SSH_AUTH_SOCK=${LINKED_SOCK}
+    export SSH_AUTH_SOCK
+    echo "${ID} SSH Agent already running"
+else
+    # Start a new SSH Agent
+    eval $(ssh-agent -s) >/dev/null
+    # Convert to canonical path
+    SSH_AUTH_SOCK="$(pyreadlink "${SSH_AUTH_SOCK}")"
+    export SSH_AUTH_SOCK
+    # Link to ID_SOCK for easy use/reference
+    ln -fns "${SSH_AUTH_SOCK}" "${ID_SOCK}"
+fi
+# Display Variables
+display_variables
+# Add IDENTITY_FILE to SSH Agent
+ssh-add -K "${IDENTITY_FILE}" 2>/dev/null
