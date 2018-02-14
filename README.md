@@ -80,6 +80,20 @@ When you `ssh devhost` with the configuration above, the following will happen:
      your choice without worry.
 
 
+## Requirements
+
+- [OpenSSH 7.3](https://www.openssh.com/txt/release-7.3) added `IdentityAgent`
+
+  - macOS 10.13 High Sierra or later
+  - Ubuntu 17.04 Zesty Zapus or later
+
+
+## Alternatives
+
+- Install discrete and properly scoped SSH key pairs on the remote host
+- [Managing multiple SSH agents - Wikitech](https://wikitech.wikimedia.org/wiki/Managing_multiple_SSH_agents)
+
+
 ## License
 
 - [LICENSE](LICENSE) ([MIT License][MIT])
