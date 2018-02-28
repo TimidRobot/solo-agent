@@ -9,6 +9,10 @@ trap '_es=${?};
     echo "${0}: line ${_lo}: \"${_co}\" exited with a status of ${_es}";
     exit ${_es}' ERR
 
+case $(uname) in
+    Darwin) GREADLINK=$(which greadlink || true) ;;
+    Linux) GREADLINK=$(which readlink || true) ;;
+esac
 PROG="${0##*/}"
 SSH_DIR="${HOME}/.ssh"
 SOCKET_DIR="${SSH_DIR}/solo-sock"
@@ -26,6 +30,16 @@ Arguments:
 "
 
 
+canonical_socket() {
+    if [[ -n "${GREADLINK}" ]]
+    then
+        ${GREADLINK} -m ${1}
+    else
+        python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "${1}"
+    fi
+}
+
+
 display_variables() {
     [[ -z "${SSH_AGENT_PID:-}" ]] || \
         echo "SSH_AGENT_PID: ${SSH_AGENT_PID}"
@@ -34,6 +48,7 @@ display_variables() {
     [[ -z "${ID_SOCK:-}" ]] || \
         echo "ID_SOCK: ${ID_SOCK}"
 }
+
 
 error_exit() {
     # Display error message and exit
@@ -70,11 +85,6 @@ help_request_check() {
     return 0
 }
 
-pyreadlink() {
-    echo "$(python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' \
-            "${1}")"
-}
-
 
 # Parse and verify arguments/options
 help_request_check "${@:-}"
@@ -93,10 +103,11 @@ then
     error_exit "IDENTITY_FILE does not exist: ${IDENTITY_FILE}"
 fi
 
+
 mkdir -p ${SOCKET_DIR}
 
 ID_SOCK=${SOCKET_DIR}/${ID}
-LINKED_SOCK="$(pyreadlink ${ID_SOCK})"
+LINKED_SOCK="$(canonical_socket ${ID_SOCK})"
 
 if [[ -n "${LINKED_SOCK}" ]] && [[ -S "${LINKED_SOCK}" ]]
 then
@@ -108,7 +119,7 @@ else
     # Start a new SSH Agent
     eval $(ssh-agent -s) >/dev/null
     # Convert to canonical path
-    SSH_AUTH_SOCK="$(pyreadlink "${SSH_AUTH_SOCK}")"
+    SSH_AUTH_SOCK="$(canonical_socket "${SSH_AUTH_SOCK}")"
     export SSH_AUTH_SOCK
     # Link to ID_SOCK for easy use/reference
     ln -fns "${SSH_AUTH_SOCK}" "${ID_SOCK}"
