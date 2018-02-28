@@ -92,8 +92,10 @@ When you `ssh devhost` with the configuration above, the following will happen:
   - macOS 10.13 High Sierra or later
   - Ubuntu 17.04 Zesty Zapus or later
 
-- Python (to provide GNU coreutils readlink-like functionality on BSD based
-  systems--including macOS)
+- Either:
+
+    - GNU coreutils readlink
+    - Python
 
 
 ## Alternatives
@@ -104,6 +106,6 @@ When you `ssh devhost` with the configuration above, the following will happen:
 
 ## License
 
-- [LICENSE](LICENSE) ([MIT License][MIT])
+- [LICENSE](LICENSE) (Expat/[MIT License][MIT])
 
 [MIT]: http://www.opensource.org/licenses/MIT "The MIT License (MIT)"
