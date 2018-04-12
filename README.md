@@ -35,7 +35,7 @@ Enable discrete SSH Agents to avoid leaking access across hosts
 
 ## Using `solo-agent`
 
-1. Assumptions
+1. Assumptions:
 
    - You need to access GitHub from a host (`devhost`) on which a third-party
      has root access
@@ -46,24 +46,25 @@ Enable discrete SSH Agents to avoid leaking access across hosts
    - You have cloned this repository to to your laptop. It is located at:
      `~/git/solo-agent`
 
-2. Ensure the global section of your SSH configuration contains:
+2. At the top of your SSH configuration, put the Match exec that starts the
+   SSH agent:
+
+        # vim: set ft=sshconfig
+        Match exec "~/git/solo-agent/solo-agent github_ro rsa_github_ro"
+
+3. In the middle of your SSH configuration, put the `devhost` stanza:
+
+        Host devhost
+            HostName devhost.example.com
+            ForwardAgent Yes
+            IdentityAgent ~/.ssh/solo-sock/github_ro
+
+4. At the bottom of your SSH configuration, ensure the global `Host *` stanza
+   includes the following two options:
 
         Host *
             AddKeysToAgent no
             ForwardAgent no
-
-3. Add ssh include: `~/.ssh/inc_github_ro`:
-
-        # vim: set ft=sshconfig
-        ForwardAgent Yes
-        IdentityAgent ~/.ssh/solo-sock/github_ro
-        Match exec "~/git/solo-agent/solo-agent github_ro rsa_github_ro"
-
-4. Update the `devhost` Host stanza to use the include:
-
-        Host devhost
-            HostName devhost.example.com
-            Include inc_github_ro
 
 
 ### Explanation
@@ -86,10 +87,10 @@ When you `ssh devhost` with the configuration above, the following will happen:
 
 ## Requirements
 
-- [OpenSSH 7.3](https://www.openssh.com/txt/release-7.3) added `IdentityAgent`
-  and `Include`
+- [OpenSSH 7.3](https://www.openssh.com/txt/release-7.3) added `IdentityAgent`:
 
   - macOS 10.13 High Sierra or later
+  - Red Hat Enterprise Linux 7 Update 4 or later
   - Ubuntu 17.04 Zesty Zapus or later
 
 - Either:
