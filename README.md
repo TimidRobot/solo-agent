@@ -45,12 +45,13 @@ Enable discrete SSH Agents to avoid leaking access across hosts
      `~/.ssh/rsa_github_ro`
    - You have cloned this repository to to your laptop. It is located at:
      `~/git/solo-agent`
+   - You have symlinked `solo-agent` to `~/bin/solo-agent`
 
 2. At the top of your SSH configuration, put the Match exec that starts the
    SSH agent:
 
         # vim: set ft=sshconfig
-        Match exec "~/git/solo-agent/solo-agent github_ro rsa_github_ro"
+        Match exec "~/bin/solo-agent github_ro rsa_github_ro"
 
 3. In the middle of your SSH configuration, put the `devhost` stanza:
 
@@ -116,7 +117,6 @@ Development of this project has been supported by [Clockwork][Clockwork]
 
 [Clockwork]: https://www.clockwork.com/
 [ClockworkNet]: https://github.com/ClockworkNet
-
 
 
 ## License
