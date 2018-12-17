@@ -9,7 +9,8 @@ trap '_es=${?};
     echo "${0}: line ${_lo}: \"${_co}\" exited with a status of ${_es}";
     exit ${_es}' ERR
 
-case $(uname) in
+UNAME=$(uname)
+case ${UNAME} in
     Darwin) GREADLINK=$(which greadlink || true) ;;
     Linux) GREADLINK=$(which readlink || true) ;;
 esac
@@ -127,4 +128,7 @@ fi
 # Display Variables
 display_variables
 # Add IDENTITY_FILE to SSH Agent
-ssh-add -K "${IDENTITY_FILE}" 2>/dev/null
+case ${UNAME} in
+    Darwin) ssh-add -K "${IDENTITY_FILE}" 2>/dev/null ;;
+    *) ssh-add -k "${IDENTITY_FILE}" 2>/dev/null ;;
+esac
