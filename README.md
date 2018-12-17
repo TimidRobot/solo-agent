@@ -30,6 +30,27 @@ Enable discrete SSH Agents to avoid leaking access across hosts
 [harmful]:https://heipei.github.io/2015/02/26/SSH-Agent-Forwarding-considered-harmful/#the-alternative-proxycommand-to-the-rescue
 
 
+## Install
+
+1. [Install Homebrew][brewinstall] -- The missing package manager for macOS
+2. Add the "tap":
+    ```shell
+    brew tap TimidRobot/tap
+    ```
+3. Install `solo-agent`:
+    ```
+    brew install solo-agent
+    ```
+
+Alternatively, since `solo-agent` is a bash script without esoteric
+dependencies, you can simply download it and ensure it is in your `PATH`.
+
+If this utility is helpful for you, please star this project so that it can
+eventually be included in Homebrew proper. Thank you!
+
+[brewinstall]:http://brew.sh/#install
+
+
 ## Using `solo-agent`
 
 1. Assumptions:
