@@ -1,4 +1,5 @@
 #!/bin/bash
+#### SETUP ####################################################################
 set -o errexit
 set -o errtrace
 set -o nounset
@@ -31,6 +32,9 @@ Arguments:
 "
 
 
+#### FUNCTIONS ################################################################
+
+
 canonical_socket() {
     if [[ -n "${GREADLINK}" ]]
     then
@@ -53,9 +57,8 @@ display_variables() {
 
 error_exit() {
     # Display error message and exit
-    local _es _msg
-    _msg=${1}
-    _es=${2:-1}
+    local _msg=${1}
+    local _es=${2:-1}
     echo "ERROR: ${_msg}" 1>&2
     exit ${_es}
 }
@@ -71,15 +74,12 @@ help_print() {
 
 help_request_check() {
     # Print Help/Usage if requested
-    local _arg
     shopt -s nocasematch
-    # only accept help "action" in 1st position
-    [[ "${1:-}" == 'help' ]] && help_print
     # evaluate all positional parameters for help options
     for _arg in "${@}"
     do
         case "${_arg}" in
-            -h | -help | --help ) help_print ;;
+            -h | -help | --help | help ) help_print ;;
         esac
     done
     shopt -u nocasematch
@@ -87,15 +87,18 @@ help_request_check() {
 }
 
 
+#### MAIN #####################################################################
+
+
 # Parse and verify arguments/options
-help_request_check "${@:-}"
 (( ${#} == 0 )) && help_print 2
+help_request_check "${@}"
 if (( ${#} < 2 ))
 then
-    error_exit 'Too few arguments: must specify both ID and IDENTITY_FILE'
+    error_exit 'Too few arguments: must specify both ID and IDENTITY_FILE' 2
 elif (( ${#} > 2 ))
 then
-    error_exit 'Too many arguments: must specify only ID and IDENTITY_FILE'
+    error_exit 'Too many arguments: must specify only ID and IDENTITY_FILE' 2
 fi
 ID="${1}"
 IDENTITY_FILE="${SSH_DIR}/${2}"
@@ -103,13 +106,11 @@ if [[ ! -f "${IDENTITY_FILE}" ]]
 then
     error_exit "IDENTITY_FILE does not exist: ${IDENTITY_FILE}"
 fi
-
-
+# Prep socket directory and related variables
 mkdir -p ${SOCKET_DIR}
-
 ID_SOCK=${SOCKET_DIR}/${ID}
 LINKED_SOCK="$(canonical_socket ${ID_SOCK})"
-
+# Use or spawn SSH Agent
 if [[ -n "${LINKED_SOCK}" ]] && [[ -S "${LINKED_SOCK}" ]]
 then
     # SSH Agent is already running with active ID_SOCK
@@ -123,11 +124,11 @@ else
     SSH_AUTH_SOCK="$(canonical_socket "${SSH_AUTH_SOCK}")"
     export SSH_AUTH_SOCK
     # Link to ID_SOCK for easy use/reference
-    ln -fns "${SSH_AUTH_SOCK}" "${ID_SOCK}"
+    ln -fhs "${SSH_AUTH_SOCK}" "${ID_SOCK}"
 fi
 # Display Variables
 display_variables
-# Add IDENTITY_FILE to SSH Agent
+# Add IDENTITY_FILE to SSH Agent (support keychain on macOS)
 case ${UNAME} in
     Darwin) ssh-add -K "${IDENTITY_FILE}" 2>/dev/null ;;
     *) ssh-add -k "${IDENTITY_FILE}" 2>/dev/null ;;
