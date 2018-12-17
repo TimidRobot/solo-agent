@@ -18,25 +18,21 @@ Enable discrete SSH Agents to avoid leaking access across hosts
 - Do not forward your SSH Agent. You do not need it to use `ProxyCommand` to
   connect through bastion/jump hosts (or `ProxyJump` with current versions of
   OpenSSH)
-
   - For example: [The alternative: ProxyCommand to the rescue - SSH Agent
-    Forwarding considered harmful][ForwardingHarmful]
-
+    Forwarding considered harmful][harmful]
 - Use separate SSH Keys for different scopes (including read-only keys).
   Accomplish this by either:
-
   - Use `solo-agent` to isolate keys when ForwardAgent is needed (ex. for
     remote version control operations)
   - Or install the SSH key pair (ex. for remote version control operations) on
     the remote host. This option is less secure, but also less complex.
 
-[ForwardingHarmful]: https://heipei.github.io/2015/02/26/SSH-Agent-Forwarding-considered-harmful/#the-alternative-proxycommand-to-the-rescue
+[harmful]:https://heipei.github.io/2015/02/26/SSH-Agent-Forwarding-considered-harmful/#the-alternative-proxycommand-to-the-rescue
 
 
 ## Using `solo-agent`
 
 1. Assumptions:
-
    - You need to access GitHub from a host (`devhost`) on which a third-party
      has root access
    - You have already created a SSH key pair for use with GitHub and added to
@@ -46,26 +42,25 @@ Enable discrete SSH Agents to avoid leaking access across hosts
    - You have cloned this repository to to your laptop. It is located at:
      `~/git/solo-agent`
    - You have symlinked `solo-agent` to `~/bin/solo-agent`
-
 2. At the top of your SSH configuration, put the Match exec that starts the
    SSH agent:
-
-        # vim: set ft=sshconfig
-        Match exec "~/bin/solo-agent github_ro rsa_github_ro"
-
+    ```
+    Match exec "~/bin/solo-agent github_ro rsa_github_ro"
+    ```
 3. In the middle of your SSH configuration, put the `devhost` stanza:
-
-        Host devhost
-            HostName devhost.example.com
-            ForwardAgent Yes
-            IdentityAgent ~/.ssh/solo-sock/github_ro
-
+    ```
+    Host devhost
+        HostName devhost.example.com
+        ForwardAgent Yes
+        IdentityAgent ~/.ssh/solo-sock/github_ro
+    ```
 4. At the bottom of your SSH configuration, ensure the global `Host *` stanza
    includes the following two options:
-
-        Host *
-            AddKeysToAgent no
-            ForwardAgent no
+    ```
+    Host *
+        AddKeysToAgent no
+        ForwardAgent no
+    ```
 
 
 ### Explanation
@@ -74,53 +69,46 @@ When you `ssh devhost` with the configuration above, the following will happen:
 1. The Match directive in the include will execute `solo-agent`. It will
    determine if there is already a valid socket symlinked from
    `~/.ssh/solo-sock/github_ro`:
-
    - If there is, it will ensure the specified key is loaded into that agent
    - If not, it will start a new agent, create the symlink, and ensure the
      specified key is loaded into that agent
-
 2. The SSH connection to `devhost` will use the SSH Agent connected to the
    specified socket. Only the key(s) added to it will be available.
-
    - You can continue to authenticate to `devhost` with the `IdentityFile` of
      your choice without worry.
 
 
 ## Requirements
 
-- [OpenSSH 7.3][OpenSSH73] added `IdentityAgent`:
-
+- [OpenSSH 7.3][openssh73] added `IdentityAgent`:
   - macOS 10.13 High Sierra or later
   - Red Hat Enterprise Linux 7 Update 4 or later
   - Ubuntu 17.04 Zesty Zapus or later
-
 - Either:
+  - GNU coreutils readlink
+  - Python
 
-    - GNU coreutils readlink
-    - Python
-
-[OpenSSH73]: https://www.openssh.com/txt/release-7.3
+[openssh73]: https://www.openssh.com/txt/release-7.3
 
 
 ## Alternatives
 
 - Install discrete and properly scoped SSH key pairs on the remote host
-- [Managing multiple SSH agents - Wikitech][MultiSSH]
+- [Managing multiple SSH agents - Wikitech][multissh]
 
-[MultiSSH]: https://wikitech.wikimedia.org/wiki/Managing_multiple_SSH_agents
+[multissh]: https://wikitech.wikimedia.org/wiki/Managing_multiple_SSH_agents
 
 
 ## Supported By
 
-Development of this project has been supported by [Clockwork][Clockwork]
-([ClockworkNet][ClockworkNet]). Thank you!
+Portions of the development of this project were supported by
+[ClockworkNet][Clockwork]. Thank you!
 
-[Clockwork]: https://www.clockwork.com/
-[ClockworkNet]: https://github.com/ClockworkNet
+[Clockwork]: https://github.com/ClockworkNet
 
 
 ## License
 
-- [LICENSE](LICENSE) (Expat/[MIT License][MIT])
+- [`LICENSE`](LICENSE) (Expat/[MIT][mit] License)
 
-[MIT]: http://www.opensource.org/licenses/MIT "The MIT License (MIT)"
+[mit]: http://www.opensource.org/licenses/MIT "The MIT License | Open Source Initiative"
