@@ -5,15 +5,14 @@ set -o errtrace
 set -o nounset
 
 trap '_es=${?};
-    _lo=${LINENO};
-    _co=${BASH_COMMAND};
-    echo "${0}: line ${_lo}: \"${_co}\" exited with a status of ${_es}";
+    printf "${0}: line ${LINENO}: \"${BASH_COMMAND}\"";
+    printf " exited with a status of ${_es}\n";
     exit ${_es}' ERR
 
 UNAME=$(uname)
 case ${UNAME} in
-    Darwin) GREADLINK=$(which greadlink || true) ;;
-    Linux) GREADLINK=$(which readlink || true) ;;
+    Darwin) GREADLINK=$(command -v greadlink || true) ;;
+    Linux) GREADLINK=$(command -v readlink || true) ;;
 esac
 PROG="${0##*/}"
 SSH_DIR="${HOME}/.ssh"
@@ -38,7 +37,7 @@ Arguments:
 canonical_socket() {
     if [[ -n "${GREADLINK}" ]]
     then
-        ${GREADLINK} -m ${1}
+        ${GREADLINK} -m "${1}"
     else
         python -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "${1}"
     fi
@@ -57,18 +56,21 @@ display_variables() {
 
 error_exit() {
     # Display error message and exit
-    local _msg=${1}
-    local _es=${2:-1}
+    local _msg
+    local -i _es
+    _msg="${1}"
+    _es="${2:-1}"
     echo "ERROR: ${_msg}" 1>&2
-    exit ${_es}
+    exit "${_es}"
 }
 
 
 help_print() {
     # Print help/usage, then exit (incorrect usage should exit 2)
-    local _es=${1:-0}
+    local -i _es
+    _es="${1:-0}"
     echo "${USAGE}"
-    exit ${_es}
+    exit "${_es}"
 }
 
 
@@ -107,19 +109,19 @@ then
     error_exit "IDENTITY_FILE does not exist: ${IDENTITY_FILE}"
 fi
 # Prep socket directory and related variables
-mkdir -p ${SOCKET_DIR}
-ID_SOCK=${SOCKET_DIR}/${ID}
-LINKED_SOCK="$(canonical_socket ${ID_SOCK})"
+mkdir -p "${SOCKET_DIR}"
+ID_SOCK="${SOCKET_DIR}/${ID}"
+LINKED_SOCK="$(canonical_socket "${ID_SOCK}")"
 # Use or spawn SSH Agent
 if [[ -n "${LINKED_SOCK}" ]] && [[ -S "${LINKED_SOCK}" ]]
 then
     # SSH Agent is already running with active ID_SOCK
-    SSH_AUTH_SOCK=${LINKED_SOCK}
+    SSH_AUTH_SOCK="${LINKED_SOCK}"
     export SSH_AUTH_SOCK
     echo "${ID} SSH Agent already running"
 else
     # Start a new SSH Agent
-    eval $(ssh-agent -s) >/dev/null
+    eval "$(ssh-agent -s)" >/dev/null
     # Convert to canonical path
     SSH_AUTH_SOCK="$(canonical_socket "${SSH_AUTH_SOCK}")"
     export SSH_AUTH_SOCK
@@ -129,7 +131,7 @@ fi
 # Display Variables
 display_variables
 # Add IDENTITY_FILE to SSH Agent (support keychain on macOS)
-case ${UNAME} in
+case "${UNAME}" in
     Darwin) ssh-add -K "${IDENTITY_FILE}" 2>/dev/null ;;
     *) ssh-add -k "${IDENTITY_FILE}" 2>/dev/null ;;
 esac
