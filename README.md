@@ -120,14 +120,6 @@ When you `ssh devhost` with the configuration above, the following will happen:
 [multissh]: https://wikitech.wikimedia.org/wiki/Managing_multiple_SSH_agents
 
 
-## Supported By
-
-Portions of the development of this project were supported by
-[ClockworkNet][Clockwork]. Thank you!
-
-[Clockwork]: https://github.com/ClockworkNet
-
-
 ## License
 
 - [`LICENSE`](LICENSE) (Expat/[MIT][mit] License)
