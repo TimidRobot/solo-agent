@@ -126,7 +126,7 @@ else
     SSH_AUTH_SOCK="$(canonical_socket "${SSH_AUTH_SOCK}")"
     export SSH_AUTH_SOCK
     # Link to ID_SOCK for easy use/reference
-    ln -fhs "${SSH_AUTH_SOCK}" "${ID_SOCK}"
+    ln -fns "${SSH_AUTH_SOCK}" "${ID_SOCK}"
 fi
 # Display Variables
 display_variables
